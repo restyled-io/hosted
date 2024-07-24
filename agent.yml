@@ -52,7 +52,6 @@ jobs:
           committer-email: "commits@restyled.io"
           committer-name: "Restyled.io"
           job-url: ${{ env.JOB_URL }}
-          log-concurrency: ${{ env.LOG_CONCURRENCY }}
           log-format: ${{ env.LOG_FORMAT }}
           log-level: ${{ env.LOG_LEVEL }}
 

@@ -46,7 +46,6 @@ act \
   --env GITHUB_REPOSITORY="$repo" \
   --env HOST_DIRECTORY="$cwd" \
   --env JOB_URL="$job_url" \
-  --env LOG_CONCURRENCY="${LOG_CONCURRENCY:-1}" \
   --env LOG_FORMAT="${LOG_FORMAT:-json}" \
   --env LOG_LEVEL="${LOG_LEVEL:-info}" \
   --eventpath "$event" \
