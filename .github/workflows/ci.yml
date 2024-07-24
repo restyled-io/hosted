@@ -17,11 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: docker/setup-buildx-action@v3
+
       - id: meta
         uses: docker/metadata-action@v5
         with:
           images: restyled/restyler
           tags: type=raw,value=${{ env.TAG }}
+
       - uses: docker/build-push-action@v5
         with:
           cache-from: type=gha
@@ -30,8 +32,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           push: ${{ github.ref == 'refs/heads/main' }}
 
-      - uses: actions/checkout@v4
-      - uses: extractions/setup-just@v2
+      # Duplicate build with load:true, so it will be available for test
+      - uses: docker/build-push-action@v5
+        with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          load: true
+
       - id: app-token
         uses: actions/create-github-app-token@v1
         with:
@@ -39,6 +48,9 @@ jobs:
           private-key: ${{ secrets.RESTYLED_DEV_PRIVATE_KEY }}
           owner: restyled-io
           repositories: demo
+
+      - uses: actions/checkout@v4
+      - uses: extractions/setup-just@v2
       - run: just tag=${{ env.TAG}} test
         env:
           GITHUB_ACCESS_TOKEN: ${{ steps.app-token.outputs.token }}
