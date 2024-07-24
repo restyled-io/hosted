@@ -1,0 +1,89 @@
+name: Agent
+
+on:
+  pull_request:
+
+jobs:
+  restyled:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - run: |
+          # Install gh
+          cd /tmp
+          curl -L -sSf https://github.com/cli/cli/releases/download/v2.53.0/gh_2.53.0_linux_amd64.tar.gz | tar xzvf -
+          sudo cp -v gh_*/bin/gh /usr/local/bin
+        working-directory: /tmp
+
+      - run: |
+          # Add support scripts
+          cat > ./set-pr-status <<'EOM'
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          args=(-f context=restyled -f "state=$1")
+
+          if (( $# >= 2 )); then
+            args+=(-f "description=$2")
+          fi
+
+          if (( $# == 3 )); then
+            args+=(-f "target_url=$3")
+          fi
+
+          endpoint='repos/${{ github.repository }}/statuses/${{ github.event.pull_request.head.sha }}'
+          exec gh api "$endpoint" "${args[@]}"
+          EOM
+
+          chmod +x set-pr-status
+          sudo mv -v set-pr-status /usr/local/bin
+
+      - run: set-pr-status pending
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - uses: restyled-io/actions/setup@v1
+      - id: restyler
+        uses: restyled-io/actions/run@v1
+        with:
+          committer-email: "commits@restyled.io"
+          committer-name: "Restyled.io"
+          job-url: ${{ env.JOB_URL }}
+          log-concurrency: ${{ env.LOG_CONCURRENCY }}
+          log-format: ${{ env.LOG_FORMAT }}
+          log-level: ${{ env.LOG_LEVEL }}
+
+      - id: create-pull-request
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ github.token }}
+          base: ${{ steps.restyler.outputs.restyled-base }}
+          branch: ${{ steps.restyler.outputs.restyled-head }}
+          title: ${{ steps.restyler.outputs.restyled-title }}
+          body: ${{ steps.restyler.outputs.restyled-body }}
+          labels: ${{ steps.restyler.outputs.restyled-labels }}
+          reviewers: ${{ steps.restyler.outputs.restyled-reviewers }}
+          team-reviewers: ${{ steps.restyler.outputs.restyled-team-reviewers }}
+          delete-branch: true
+
+      - if: |
+          steps.restyler.outputs.differences == 'false' &&
+          steps.restyler.outputs.skipped == 'true'
+        run: set-pr-status success "Restyling skipped"
+
+      - if: |
+          steps.restyler.outputs.differences != 'true' &&
+          steps.restyler.outputs.skipped != 'true'
+        run: set-pr-status success "No differences"
+
+      - if: |
+          steps.restyler.outputs.differences == 'true' &&
+          steps.restyler.outputs.skipped != 'true'
+        run: set-pr-status failure "Restyled found differences" '${{ steps.create-pull-request.outputs.pull-request-url }}'
+
+      - if: ${{ failure() }}
+        run: set-pr-status error "Restyled errored"
