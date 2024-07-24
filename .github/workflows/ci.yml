@@ -32,11 +32,13 @@ jobs:
 
       - uses: actions/checkout@v4
       - uses: extractions/setup-just@v2
-      - uses: actions/create-github-app-token@v1
-        id: app-token
+      - id: app-token
+        uses: actions/create-github-app-token@v1
         with:
           app-id: ${{ vars.RESTYLED_DEV_APP_ID }}
           private-key: ${{ secrets.RESTYLED_DEV_PRIVATE_KEY }}
+          owner: restyled-io
+          repositories: demo
       - run: just tag=${{ env.TAG}} test
         env:
           GITHUB_ACCESS_TOKEN: ${{ steps.app-token.outputs.token }}
