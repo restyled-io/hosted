@@ -37,6 +37,6 @@ jobs:
         with:
           app-id: ${{ vars.RESTYLED_DEV_APP_ID }}
           private-key: ${{ secrets.RESTYLED_DEV_PRIVATE_KEY }}
-      - run: just tag=${{ env.TAG}} image-test
+      - run: just tag=${{ env.TAG}} test
         env:
           GITHUB_ACCESS_TOKEN: ${{ steps.app-token.outputs.token }}
