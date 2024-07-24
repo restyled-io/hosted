@@ -9,6 +9,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  TAG: gha-rc1
+
 jobs:
   image:
     runs-on: ubuntu-latest
@@ -18,7 +21,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: restyled/restyler
-          tags: type=raw,value=gha-rc1
+          tags: type=raw,value=${{ env.TAG }}
       - uses: docker/build-push-action@v5
         with:
           cache-from: type=gha
@@ -33,6 +36,6 @@ jobs:
         with:
           app-id: ${{ vars.RESTYLED_DEV_APP_ID }}
           private-key: ${{ secrets.RESTYLED_DEV_PRIVATE_KEY }}
-      - run: just image-test
+      - run: just tag=${{ env.TAG}} image-test
         env:
           GITHUB_ACCESS_TOKEN: ${{ steps.app-token.outputs.token }}
