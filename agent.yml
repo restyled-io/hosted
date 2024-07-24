@@ -22,15 +22,12 @@ jobs:
           #!/usr/bin/env bash
           set -euo pipefail
 
-          args=(-f context=restyled -f "state=$1")
-
-          if (( $# >= 2 )); then
-            args+=(-f "description=$2")
-          fi
-
-          if (( $# == 3 )); then
-            args+=(-f "target_url=$3")
-          fi
+          args=(
+            -f context=restyled
+            -f "state=$1"
+            -f "description=$2"
+            -f "target_url=$3"
+          )
 
           endpoint='repos/${{ github.repository }}/statuses/${{ github.event.pull_request.head.sha }}'
           exec gh api "$endpoint" "${args[@]}"
@@ -39,7 +36,7 @@ jobs:
           chmod +x set-pr-status
           sudo mv -v set-pr-status /usr/local/bin
 
-      - run: set-pr-status pending
+      - run: set-pr-status pending "Restyling" ${{ env.JOB_URL }}
 
       - uses: actions/checkout@v4
         with:
@@ -72,12 +69,12 @@ jobs:
       - if: |
           steps.restyler.outputs.differences == 'false' &&
           steps.restyler.outputs.skipped == 'true'
-        run: set-pr-status success "Restyling skipped"
+        run: set-pr-status success "Restyling skipped" ${{ env.JOB_URL }}
 
       - if: |
           steps.restyler.outputs.differences != 'true' &&
           steps.restyler.outputs.skipped != 'true'
-        run: set-pr-status success "No differences"
+        run: set-pr-status success "No differences" ${{ env.JOB_URL }}
 
       - if: |
           steps.restyler.outputs.differences == 'true' &&
@@ -85,4 +82,4 @@ jobs:
         run: set-pr-status failure "Restyled found differences" '${{ steps.create-pull-request.outputs.pull-request-url }}'
 
       - if: ${{ failure() }}
-        run: set-pr-status error "Restyled errored"
+        run: set-pr-status error "Restyled errored" ${{ env.JOB_URL }}
