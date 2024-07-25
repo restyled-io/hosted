@@ -8,49 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
+      GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
-      - run: |
-          # Install gh
-          cd /tmp
-          curl -L -sSf https://github.com/cli/cli/releases/download/v2.53.0/gh_2.53.0_linux_amd64.tar.gz | tar xzvf -
-          sudo cp -v gh_*/bin/gh /usr/local/bin
-        working-directory: /tmp
-
-      - run: |
-          # Add support scripts
-          cat > ./set-pr-status <<'EOM'
-          #!/usr/bin/env bash
-          set -euo pipefail
-
-          args=(
-            -f context=restyled
-            -f "state=$1"
-            -f "description=$2"
-            -f "target_url=$3"
-          )
-
-          endpoint='repos/${{ github.repository }}/statuses/${{ github.event.pull_request.head.sha }}'
-          exec gh api "$endpoint" "${args[@]}"
-          EOM
-
-          chmod +x set-pr-status
-          sudo mv -v set-pr-status /usr/local/bin
-
-          sudo apt-get update -y
-          sudo apt-get install -y jo
-
-          cat > ./log-info <<'EOM'
-          #!/usr/bin/env bash
-          while read -r ln; do
-            now=$(date --iso-8601=ns --utc | sed 's/,/./; s/+00:00$/Z/;')
-            esc=$(sed 's/^@/\\@/' <<<"$ln")
-            jo "time=$now" "level=info" "message[text]=${esc:-" "}" "$@"
-          done
-          EOM
-
-          chmod +x log-info
-          sudo mv -v log-info /usr/local/bin
-
       - run: set-pr-status pending "Restyling" ${{ env.JOB_URL }}
 
       - uses: actions/checkout@v4

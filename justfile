@@ -16,3 +16,7 @@ test:
     --volume /tmp:/tmp \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     restyled/restyler:{{tag}} --job-url https://example.com {{test-pr}}
+
+act-image:
+  docker build --tag restyled/act:latest --file act.Dockerfile .
+  docker push restyled/act:latest
