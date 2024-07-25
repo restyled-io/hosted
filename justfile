@@ -5,11 +5,12 @@ build:
   docker build --tag restyled/restyler:{{tag}} .
 
 test-pr := "restyled-io/demo#45"
+test-log-format := "tty"
 
 # Test the Docker image against a demo PR
 test: build
   docker run --rm \
-    --env LOG_FORMAT=tty \
+    --env LOG_FORMAT={{test-log-format}} \
     --env LOG_LEVEL=debug \
     --env GITHUB_ACCESS_TOKEN \
     --volume /tmp:/tmp \
