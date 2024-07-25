@@ -13,7 +13,8 @@ RUN \
 RUN \
   cd /tmp && \
   curl -L -sSf https://github.com/cli/cli/releases/download/v2.53.0/gh_2.53.0_linux_amd64.tar.gz | tar xzvf - && \
-  cp -v gh_*/bin/gh /usr/local/bin
+  cp -v gh_*/bin/gh /usr/local/bin && \
+  rm -r gh_*
 
 # Support scripts
 COPY bin /usr/local/bin/
