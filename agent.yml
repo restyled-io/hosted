@@ -36,6 +36,21 @@ jobs:
           chmod +x set-pr-status
           sudo mv -v set-pr-status /usr/local/bin
 
+          sudo apt-get update -y
+          sudo apt-get install -y jo
+
+          cat > ./log-info <<'EOM'
+          #!/usr/bin/env bash
+          while read -r ln; do
+            now=$(date --iso-8601=ns --utc | sed 's/,/./; s/+00:00$/Z/;')
+            esc=$(sed 's/^@/\\@/' <<<"$ln")
+            jo "time=$now" "level=info" "message[text]=${esc:-" "}" "$@"
+          done
+          EOM
+
+          chmod +x log-info
+          sudo mv -v log-info /usr/local/bin
+
       - run: set-pr-status pending "Restyling" ${{ env.JOB_URL }}
 
       - uses: actions/checkout@v4
@@ -51,6 +66,22 @@ jobs:
           job-url: ${{ env.JOB_URL }}
           log-format: ${{ env.LOG_FORMAT }}
           log-level: ${{ env.LOG_LEVEL }}
+
+      - if: ${{ steps.restyler.outputs.differences == 'true' }}
+        run: |
+          # Store differences patch
+          log-info "context[patch]=true" <<'EOM'
+          ${{ steps.restyler.outputs.git-patch }}
+          EOM
+
+          log-info <<'EOM'
+          NOTE: you can manually apply these fixes by running:
+
+              git checkout <your branch>
+              curl ${{ env.JOB_URL }}/patch | git am
+              git push
+
+          EOM
 
       - id: create-pull-request
         if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
