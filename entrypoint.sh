@@ -49,6 +49,6 @@ act \
   --env LOG_FORMAT="${LOG_FORMAT:-json}" \
   --env LOG_LEVEL="${LOG_LEVEL:-info}" \
   --eventpath "$event" \
-  --platform ubuntu-latest=catthehacker/ubuntu:act-latest \
+  --platform ubuntu-latest=restyled/act:latest \
   --secret GITHUB_TOKEN="$GITHUB_ACCESS_TOKEN" \
   --workflows /opt/workflows

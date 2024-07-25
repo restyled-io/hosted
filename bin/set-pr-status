@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+args=(
+  -f context=restyled
+  -f "state=$1"
+  -f "description=$2"
+  -f "target_url=$3"
+)
+
+endpoint=repos/$GITHUB_REPOSITORY/statuses/$GITHUB_PR_HEAD_SHA
+exec gh api "$endpoint" "${args[@]}"
