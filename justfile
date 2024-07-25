@@ -8,7 +8,7 @@ test-pr := "restyled-io/demo#45"
 test-log-format := "tty"
 
 # Test the Docker image against a demo PR
-test: build
+test:
   docker run --rm \
     --env LOG_FORMAT={{test-log-format}} \
     --env LOG_LEVEL=debug \
